@@ -40,13 +40,20 @@ public class IngestionService {
         return chunks.size();
     }
 
+    /**
+     * Accepts either raw text or a URL and routes it to the appropriate ingestion pipeline.
+     *
+     * <p>If the input is valid raw text, it is chunked and embedded immediately.
+     * If the input is a valid URL, fetching is not yet implemented — this method
+     * currently does nothing for URLs.
+     *
+     * @param input raw text to ingest, or a URL whose content should eventually be ingested
+     */
 
-
-
-    public void check(String submission) {
+    public void check(String input) {
         UrlValidator urlValidator = new UrlValidator();
-        if (!urlValidator.isValid(submission)) {
-            ingest(submission);
+        if (!urlValidator.isValid(input)) {
+            ingest(input);
         } else {
             // TODO fetch url content before ingesting
         }
