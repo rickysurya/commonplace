@@ -1,3 +1,24 @@
 spring:
   application:
     name: commonplace
+  datasource:
+    url: jdbc:postgresql://localhost:5432/commonplace
+    username: dev
+    password: password
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      embedding:
+        model: mxbai-embed-large        # can switch to nomic-embed-text for high volume but with search accuracy as the trade-off
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        dimensions: 1024                #768 for nomic-embed-text
+        index-type: HNSW                # Hierarchial Navigable Small World for faster similarity search
+        distance-type: COSINE_DISTANCE
