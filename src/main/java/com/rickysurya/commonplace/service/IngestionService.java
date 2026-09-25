@@ -1,43 +1,50 @@
 package com.rickysurya.commonplace.service;
 
+import com.rickysurya.commonplace.common.Fetch;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 @Service
 public class IngestionService {
 
+    private final Fetch fetch;
     private final VectorStore vectorStore;
     private final TokenTextSplitter tokenTextSplitter;
 
-    public IngestionService(VectorStore vectorStore) {
+    public IngestionService(Fetch fetch, VectorStore vectorStore, TokenTextSplitter tokenTextSplitter) {
+        this.fetch = fetch;
         this.vectorStore = vectorStore;
-        this.tokenTextSplitter = TokenTextSplitter.builder()
-                .withChunkSize(800)
-                .withMinChunkSizeChars(350)
-                .withMinChunkLengthToEmbed(5)
-                .withMaxNumChunks(10000)
-                .withKeepSeparator(true)
-                .build();
+        this.tokenTextSplitter = tokenTextSplitter;
     }
 
     /**
      * Ingests text by splitting it into chunks and storing them in the vector store.
      *
      * @param text The raw text to ingest.
-     * @return The number of chunks created.
      */
 
     // TODO add metadata e.g. source, date, title to the document
-    public int ingest(String text) {
+    public void ingest(String text) {
         Document doc = new Document(text);
         List<Document> chunks = tokenTextSplitter.split(doc);
         vectorStore.add(chunks);
-        return chunks.size();
+    }
+
+    //TODO once fetch url is finished
+    public void ingestUrl(String url) {
+        try {
+            ingest(fetch.fetchUrl(url));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
