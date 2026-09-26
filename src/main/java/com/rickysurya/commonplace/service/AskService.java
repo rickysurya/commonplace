@@ -55,18 +55,18 @@ public class AskService {
     }
 
     public AskResponse ask(String question) {
-        List<Document> contexts = search(question);
-        if (contexts.isEmpty()) {
+        List<Document> docs = search(question);
+        if (docs.isEmpty()) {
             return new AskResponse("I couldn't find anything relevant.",List.of());
         }
-        String context = buildContext(contexts);
+        String context = buildContext(docs);
 
         String answer = chatClient.prompt()
                 .system(SYSTEM_PROMPT)
                 .user(buildUserMessage(context, question))
                 .call()
                 .content();
-        return new AskResponse(answer, List.of(context));
+        return new AskResponse(answer, docs.stream().map(Document::getText).toList());
     }
 
 }
