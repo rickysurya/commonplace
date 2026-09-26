@@ -14,6 +14,8 @@ spring:
   ai:
     ollama:
       base-url: http://localhost:11434
+      chat:
+        model: qwen2.5:3b
       embedding:
         model: mxbai-embed-large        # can switch to nomic-embed-text for high volume but with search accuracy as the trade-off
     vectorstore:
