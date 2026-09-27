@@ -1,26 +1,30 @@
 package com.rickysurya.commonplace.service;
 
-import com.rickysurya.commonplace.common.Fetch;
-import org.apache.commons.validator.routines.UrlValidator;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.sax.BodyContentHandler;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class IngestionService {
 
-    private final Fetch fetch;
     private final VectorStore vectorStore;
     private final TokenTextSplitter tokenTextSplitter;
 
-    public IngestionService(Fetch fetch, VectorStore vectorStore, TokenTextSplitter tokenTextSplitter) {
-        this.fetch = fetch;
+
+    public IngestionService(VectorStore vectorStore, TokenTextSplitter tokenTextSplitter) {
         this.vectorStore = vectorStore;
         this.tokenTextSplitter = tokenTextSplitter;
     }
@@ -31,38 +35,31 @@ public class IngestionService {
      * @param text The raw text to ingest.
      */
 
-    // TODO add metadata e.g. source, date, title to the document
-    public void ingest(String text) {
-        Document doc = new Document(text);
+    public void ingest(String text, Map<String, Object> metadata) {
+        Document doc = new Document(text, metadata);
         List<Document> chunks = tokenTextSplitter.split(doc);
         vectorStore.add(chunks);
     }
 
-    //TODO once fetch url is finished
-    public void ingestUrl(String url) {
-        try {
-            ingest(fetch.fetchUrl(url));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public void ingestFile(MultipartFile file) {
+        String text = extractText(file);
+        String source = file.getOriginalFilename();
+        ingest(text, Map.of("source", source != null ? source : "unknown"));
     }
 
-    /**
-     * Accepts either raw text or a URL and routes it to the appropriate ingestion pipeline.
-     *
-     * <p>If the input is valid raw text, it is chunked and embedded immediately.
-     * If the input is a valid URL, fetching is not yet implemented — this method
-     * currently does nothing for URLs.
-     *
-     * @param input raw text to ingest, or a URL whose content should eventually be ingested
-     */
+    private String extractText(MultipartFile file) {
+        AutoDetectParser parser = new AutoDetectParser();
+        // -1 to prevent truncation
+        BodyContentHandler handler = new BodyContentHandler(-1);
+        Metadata metadata = new Metadata();
+        ParseContext context = new ParseContext();
 
-    public void check(String input) {
-        UrlValidator urlValidator = new UrlValidator();
-        if (!urlValidator.isValid(input)) {
-            ingest(input);
-        } else {
-            // TODO fetch url content before ingesting
+        try (InputStream stream = file.getInputStream()) {
+            parser.parse(stream, handler, metadata, context);
+        } catch (SAXException | IOException | TikaException e) {
+            throw new RuntimeException("Failed to extract text from " + file.getOriginalFilename(), e);
         }
+        return handler.toString();
     }
+
 }
