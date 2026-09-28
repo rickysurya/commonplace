@@ -41,9 +41,15 @@ public class IngestionService {
         vectorStore.add(chunks);
     }
 
+    public void ingestText(String text, String source) {
+        String src = (source == null || source.isBlank()) ? "manual" : source;
+        ingest(text, Map.of("source", src));
+    }
+
     public void ingestFile(MultipartFile file) {
         String text = extractText(file);
         String source = file.getOriginalFilename();
+        String src = source != null ? source : "unknown";
         ingest(text, Map.of("source", source != null ? source : "unknown"));
     }
 
