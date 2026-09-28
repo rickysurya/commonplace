@@ -1,52 +1,51 @@
 # Commonplace
 
-A personal knowledge base with semantic search and RAG-powered Q&A. Paste in text or articles; ask questions in natural language and get answers grounded in your own sources.
+`Java 25` · `Spring Boot 4` · `pgvector` · `Ollama` · MIT
+
+Personal knowledge base with semantic search 
+and RAG-powered Q&A. I made it to keep track of articles, journals, papers, and my own notes. 
+Whenever I write notes after learning something new, I seldom reopen the notes and just resort to a search engine. It feels like such a shame that after the time dedicated for writing notes with my own language and understanding that helps me recall the knowledge better. 
+With this it'd be easier for me to recall especially if I had written notes about it or the files that I have read. 
 
 ## What it does
 
-- **Ingest:** accepts raw text (URL ingestion planned), chunks it, embeds each chunk, stores it in Postgres with pgvector.
-- **Search:** finds semantically similar chunks using cosine similarity over an HNSW index.
-- **Ask (planned):** retrieves the top-K relevant chunks and asks a local LLM to answer using only those chunks, with citations.
+The app allows user to ingest raw text or PDF/TXT/DOCX files. Ingested data are then chunked and embedded with mxbai-embed-large. These vector data are then stored in Postgres with pgvector. User can ask natural language questions and then answered with source referring to chunks from ingested data
 
 ## Architecture
 
-    text ──▶ chunk (TokenTextSplitter)
-         ──▶ embed (Ollama / mxbai-embed-large, 1024 dims)
-         ──▶ store (Postgres + pgvector, HNSW index)
+```mermaid
+flowchart LR
+    A[Client] -->|POST /api/ingest| B[IngestionService]
+    A -->|POST /api/ingest/file| B
+    B --> C[TokenTextSplitter]
+    C --> D[VectorStore]
+    D --> E[(Postgres + pgvector)]
 
-    question ──▶ embed
-             ──▶ similarity search (cosine distance, top-K)
-             ──▶ build prompt with retrieved chunks
-             ──▶ generate answer (Ollama / qwen2.5:3b)
+    A -->|GET /api/search| F[SearchService]
+    F --> D
+
+    A -->|GET /api/ask| G[AskService]
+    G --> D
+    G --> H[ChatClient]
+    H --> I[Ollama: qwen2.5:3b]
+    G -.->|embed query| J[Ollama: mxbai-embed-large]
+    D -.->|embed chunks| J
+```
+
 
 ## Stack
 
-| Component | Choice | Why |
-|---|---|---|
-| Runtime | Java 25, Spring Boot 4 | Current LTS, modern virtual threads |
-| App layer | Spring Boot | Auto-config for datasource, AI, and vector store |
-| Embeddings | Ollama + mxbai-embed-large (1024 dims) | Local, private, strong retrieval quality |
-| LLM | Ollama + qwen2.5:3b | Local, small enough to run on laptop |
-| Vector store | Postgres + pgvector | One database for vectors and metadata; SQL for everything |
-| Index | HNSW (cosine) | Fast approximate search, builds on empty table |
-| Chunking | Spring AI TokenTextSplitter | Token-based, punctuation-aware, overlap-safe |
+| Component | Choice | Why                                                                                                        |
+|-----------|--------|------------------------------------------------------------------------------------------------------------|
+| LLM integration | Spring AI 2.0 | Native Ollama support. Provider-agnostic interfaces                                                        |
+| Embeddings | mxbai-embed-large (via Ollama) | 1024 dims. Better semantic resolution than 768-dim alternatives (nomic-embed-text)                         |
+| Generation | qwen2.5:3b (via Ollama) | Lightweight model. Adequate for RAG when retrieval is good                                                 |
+| Vector store | Postgres + pgvector | Database for vectors and metadata. SQL for filtering and joins                                             |
+| Index | HNSW | Fast approximate nearest-neighbor search. This works with incremental ingestion                            |
+| Distance metric | Cosine | Text embeddings encode direction, not magnitude. Cosine measures angle, which maps to semantic similarity. |
+| Chunking | Spring AI `TokenTextSplitter` | It respects punctuation, supports overlapping, and is token-aware                                          |
+| File extraction | Apache Tika | Single API for PDF, DOCX, XLSX, HTML. Format detection built in                                            |
 
-## Why these choices
-
-**Why pgvector over a dedicated vector DB (Pinecone, Qdrant, Weaviate):**
-One database instead of two. Metadata and vectors live together, so filtering and joining are just SQL. For a personal knowledge base, operational simplicity beats specialized performance.
-
-**Why HNSW over IVFFlat:**
-Ingestion is incremental — chunks get added over time. HNSW can be built on an empty table and stays fast as data grows. IVFFlat needs existing data to train clusters.
-
-**Why cosine distance:**
-Text embeddings are directionally meaningful, not positionally. Cosine measures angle between vectors, ignoring magnitude. It's the standard metric for text embeddings.
-
-**Why mxbai-embed-large over nomic-embed-text:**
-1024 dimensions vs 768. More room to encode fine semantic distinctions. Retrieval quality is the ceiling on generation quality — worth the extra ~400MB.
-
-**Why local models (Ollama) over hosted APIs:**
-No API keys, no per-token cost, no data leaving the machine. Slower, but this is a personal tool, not a product.
 
 ## Setup
 
@@ -56,44 +55,68 @@ No API keys, no per-token cost, no data leaving the machine. Slower, but this is
 - Docker
 - Ollama
 
-### 1. Pull models
+### Steps
 
-    ollama pull mxbai-embed-large
-    ollama pull qwen2.5:3b
+1. docker run postgres...
+2. ollama pull mxbai-embed-large
+3. ollama pull qwen2.5:3b
+4. ./mvnw spring-boot:run
 
-### 2. Start Postgres with pgvector
-
-    docker run -d \
-      --name commonplace-db \
-      -e POSTGRES_PASSWORD=devpass \
-      -e POSTGRES_USER=dev \
-      -e POSTGRES_DB=commonplace \
-      -p 5432:5432 \
-      -v commonplace-pgdata:/var/lib/postgresql/data \
-      pgvector/pgvector:pg16
-
-### 3. Run
-
-    ./mvnw spring-boot:run
-
-Schema is created automatically on first boot (`initialize-schema: true`).
 
 ## API
 
-| Method | Path | Body / Query | Returns |
-|---|---|---|---|
-| POST | `/api/ingest` | `{ "text": "..." }` | `201` on success |
-| GET | `/api/search` | `?q=...&topK=5` | List of similar chunks with scores |
-| GET | `/api/ask` | `?q=...` | *(planned)* Answer + source chunks |
+| Method | Endpoint | Purpose | Content-Type          |
+|--------|----------|---------|-----------------------|
+| POST | `/api/ingest` | Ingest raw text | `application/json`    |
+| POST | `/api/ingest/file` | Ingest a document (PDF, DOCX, TXT, MD) | `multipart/form-data` |
+| GET | `/api/search` | Retrieve similar chunks without generation | -                     |
+| GET | `/api/ask` | Retrieve chunks and generate an answer | -                     |
 
-## Not yet done
+Interactive docs at `http://localhost:8080/swagger-ui.html`
 
-- URL ingestion (fetch + extract article text)
-- Streaming LLM responses
-- Deduplication on ingest
-- Metadata filtering (by source, date, tag)
-- Kafka-based async ingestion pipeline
-- Redis-backed dedup and job queue
+
+## Example
+
+**Ingest a note:**
+
+    curl -X POST localhost:8080/api/ingest \
+      -H "Content-Type: application/json" \
+      -d '{"text": "Octopuses have three hearts. Two pump blood to the gills, one pumps it to the rest of the body. The third heart stops beating when they swim, which is why they prefer crawling.", "source": "ocean-facts.md"}'
+
+**Ask a question about it:**
+
+    curl "localhost:8080/api/ask?q=why%20do%20octopuses%20prefer%20crawling"
+
+    {
+      "answer": "Octopuses prefer crawling because the third heart that stops beating when they swim reduces their efficiency in swimming compared to crawling.",
+      "sources": [
+        {
+          "text": "Octopuses have three hearts. Two pump blood to the gills, one pumps it to the rest of the body. The third heart stops beating when they swim, which is why they prefer crawling.",
+          "source": "ocean-facts.md",
+          "score": 0.81
+        }
+      ]
+    }
+
+## Why RAG? Why not MCP?
+RAG fits better for this use case. It retrieves first, then the LLM answers over a fixed set of chunks (top-K). That means retrieval is deterministic, not probabilistic so the same question returns the same sources every time, and every answer traces back to chunks from ingested text or files.
+
+With MCP, the same question can lead to different answers because the model decides what to fetch at query time. For a personal knowledge base, that defeats the purpose. The whole point is to store what I've learned and read, and to retrieve it reliably. If retrieval isn't reproducible, I might as well just use a search engine.
+Which I already have. It's called a browser.
+
+## Known limitations
+
+- Text extraction quality varies with PDF layout (e.g. newspaper)
+- Local LLM (qwen2.5:3b) is fast but less accurate than hosted models
+- No URL ingestion (by design)
+
+## Roadmap 
+ - Allow user to switch LLM and/or embedding model with ease via YAML file
+ - Stream tokens from the LLM as they are generated 
+ - Deduplication by content-hash the file or text before chunking
+ - Async ingestion 
+ - Metadata filtering
+ - BM25 keyword matching
 
 ## License
 
