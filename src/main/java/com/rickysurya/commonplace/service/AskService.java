@@ -31,6 +31,8 @@ public class AskService {
              - Do not use prior knowledge.
              - Be concise.
              - Do not mention that you were given "context" or "chunks" just answer naturally.
+             - When the context directly states the answer, use that wording. Do not rephrase.
+             - If the context does not directly state the answer but contains relevant facts, synthesize from those facts.
             
             """;
 
