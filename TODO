@@ -1,0 +1,2 @@
+- Allow flexible model
+ - YAML -> AI model, embedding model, chunking config, input prefixes for specified embedding model

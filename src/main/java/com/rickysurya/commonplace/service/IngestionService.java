@@ -50,7 +50,7 @@ public class IngestionService {
         String text = extractText(file);
         String source = file.getOriginalFilename();
         String src = source != null ? source : "unknown";
-        ingest(text, Map.of("source", source != null ? source : "unknown"));
+        ingest(text, Map.of("source", src));
     }
 
     private String extractText(MultipartFile file) {
