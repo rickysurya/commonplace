@@ -42,6 +42,7 @@ public class SearchService {
                 SearchRequest.builder()
                         .query(query)
                         .topK(topK)
+                        .similarityThreshold(0.5)
                         .build()
         );
     }

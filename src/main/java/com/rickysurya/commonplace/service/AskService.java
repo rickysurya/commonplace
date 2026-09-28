@@ -25,10 +25,12 @@ public class AskService {
             You are a personal knowledge assistant. Answer the user's question using ONLY the context provided below.
             
              Rules:
-             - If the answer is not in the context, respond exactly: "I couldn't find this in your notes."
+             - If the context contains relevant information, use it to answer.
+             - If the context does not contain relevant information, respond exactly: "I couldn't find this in your notes."
+             - Prefer partial answers over refusing. Only refuse if the context is unrelated to the question.
              - Do not use prior knowledge.
              - Be concise.
-             - Do not mention that you were given "context" or "chunks" — just answer naturally.
+             - Do not mention that you were given "context" or "chunks" just answer naturally.
             
             """;
 
@@ -41,6 +43,7 @@ public class AskService {
                 SearchRequest.builder()
                         .query(prefixedQuery)
                         .topK(5)
+                        .similarityThreshold(0.5)
                         .build()
         );
     }
