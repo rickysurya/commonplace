@@ -4,6 +4,6 @@ import java.util.List;
 
 public record AskResponse(
         String Response,
-        List<String> Sources
+        List<Source> Sources
 ) {
 }

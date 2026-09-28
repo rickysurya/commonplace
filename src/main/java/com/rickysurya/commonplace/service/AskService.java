@@ -1,6 +1,7 @@
 package com.rickysurya.commonplace.service;
 
 import com.rickysurya.commonplace.dto.AskResponse;
+import com.rickysurya.commonplace.dto.Source;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 @Service
 public class AskService {
     private final VectorStore vectorStore;
-    private ChatClient chatClient;
+    private final ChatClient chatClient;
 
     public AskService(VectorStore vectorStore, ChatClient.Builder chatClientBuilder) {
         this.vectorStore = vectorStore;
@@ -66,7 +67,14 @@ public class AskService {
                 .user(buildUserMessage(context, question))
                 .call()
                 .content();
-        return new AskResponse(answer, docs.stream().map(Document::getText).toList());
+        List<Source> sources = docs.stream()
+                .map(d -> new Source(
+                        d.getText(),
+                        (String) d.getMetadata().get("source"),
+                        d.getScore() != null ? d.getScore() :0.0
+
+                )).toList();
+        return new AskResponse(answer, sources);
     }
 
 }
