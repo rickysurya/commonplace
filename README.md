@@ -88,7 +88,7 @@ Interactive docs at `http://localhost:8080/swagger-ui.html`
     curl "localhost:8080/api/ask?q=why%20do%20octopuses%20prefer%20crawling"
 
     {
-      "answer": "Octopuses prefer crawling because the third heart that stops beating when they swim reduces their efficiency in swimming compared to crawling.",
+      "answer": "he reason Octopuses prefer crawling is because their third heart stops beating when they swim, affecting their blood flow.",
       "sources": [
         {
           "text": "Octopuses have three hearts. Two pump blood to the gills, one pumps it to the rest of the body. The third heart stops beating when they swim, which is why they prefer crawling.",
