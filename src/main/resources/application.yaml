@@ -2,9 +2,9 @@ spring:
   application:
     name: commonplace
   datasource:
-    url: jdbc:postgresql://localhost:5432/commonplace
-    username: dev
-    password: password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/commonplace}
+    username: ${SPRING_DATASOURCE_USERNAME:dev}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
 
   jpa:
     hibernate:
@@ -13,7 +13,7 @@ spring:
 
   ai:
     ollama:
-      base-url: http://localhost:11434
+      base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://localhost:11434}
       chat:
         model: qwen2.5:3b
       embedding:

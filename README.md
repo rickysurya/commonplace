@@ -51,16 +51,33 @@ flowchart LR
 
 ### Prerequisites
 
-- Java 25
+- Java 25 (only needed for development mode)
 - Docker
-- Ollama
+- [Ollama](https://ollama.com)
 
 ### Steps
 
-1. docker run postgres...
-2. ollama pull mxbai-embed-large
-3. ollama pull qwen2.5:3b
-4. ./mvnw spring-boot:run
+1. **Configure environment**
+
+        cp .env.example .env
+
+2. **Pull models**
+
+        ollama pull mxbai-embed-large
+        ollama pull qwen2.5:3b
+
+3. **Choose how to run**
+
+   **Development**:
+
+        docker compose up -d          # start Postgres
+        ./mvnw spring-boot:run        # run app on host
+
+   **Everything in docker**:
+
+        docker compose --profile full up -d --build
+
+   Open http://localhost:8080
 
 
 ## API
