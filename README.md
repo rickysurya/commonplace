@@ -1,7 +1,5 @@
 # Commonplace
 
-`Java 25` · `Spring Boot 4` · `pgvector` · `Ollama` · MIT
-
 Personal knowledge base with semantic search 
 and RAG-powered Q&A. I made it to keep track of articles, journals, papers, and my own notes. 
 Whenever I write notes after learning something new, I seldom reopen the notes and just resort to a search engine. It feels like such a shame that after the time dedicated for writing notes with my own language and understanding that helps me recall the knowledge better. 
@@ -51,7 +49,7 @@ flowchart LR
 
 ### Prerequisites
 
-- Java 25 (only needed for development mode)
+- Java 25 (only needed for development)
 - Docker
 - [Ollama](https://ollama.com)
 
@@ -128,7 +126,6 @@ Which I already have. It's called a browser.
 - No URL ingestion (by design)
 
 ## Roadmap 
- - Allow user to switch LLM and/or embedding model with ease via YAML file
  - Stream tokens from the LLM as they are generated 
  - Deduplication by content-hash the file or text before chunking
  - Async ingestion 
