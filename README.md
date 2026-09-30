@@ -7,27 +7,33 @@ With this it'd be easier for me to recall especially if I had written notes abou
 
 ## What it does
 
-The app allows user to ingest raw text or PDF/TXT/DOCX files. Ingested data are then chunked and embedded with mxbai-embed-large. These vector data are then stored in Postgres with pgvector. User can ask natural language questions and then answered with source referring to chunks from ingested data
+The app allows user to ingest raw text or PDF/TXT/DOCX files. Ingested data is chunked and embedded with `mxbai-embed-large', then stored in Postgres with pgvector. Users can ask natural language questions and then receive answers with source that reference the chunks they came from
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    A[Client] -->|POST /api/ingest| B[IngestionService]
-    A -->|POST /api/ingest/file| B
-    B --> C[TokenTextSplitter]
-    C --> D[VectorStore]
-    D --> E[(Postgres + pgvector)]
+    Client([Client])
 
-    A -->|GET /api/search| F[SearchService]
-    F --> D
+    Client -->|POST /api/ingest| Ingest[IngestionService]
+    Client -->|POST /api/ingest/file| Ingest
+    Ingest --> Splitter[TokenTextSplitter]
+    Splitter --> VS[VectorStore]
 
-    A -->|GET /api/ask| G[AskService]
-    G --> D
-    G --> H[ChatClient]
-    H --> I[Ollama: qwen2.5:3b]
-    G -.->|embed query| J[Ollama: mxbai-embed-large]
-    D -.->|embed chunks| J
+    Client -->|GET /api/search| Search[SearchService]
+    Search --> VS
+
+    Client -->|GET /api/ask| Ask[AskService]
+    Ask --> VS
+    Ask --> Chat[ChatClient]
+
+    Client -->|GET /api/sources| Sources[SourceService]
+    Sources --> PG[(Postgres + pgvector)]
+
+    VS --> PG
+    VS -.->|embed| OllamaEmb[Ollama: mxbai-embed-large]
+    Chat --> OllamaChat[Ollama: qwen2.5:3b]
+
 ```
 
 
@@ -80,13 +86,14 @@ flowchart LR
 
 ## API
 
-| Method | Endpoint | Purpose | Content-Type          |
-|--------|----------|---------|-----------------------|
-| POST | `/api/ingest` | Ingest raw text | `application/json`    |
-| POST | `/api/ingest/file` | Ingest a document (PDF, DOCX, TXT, MD) | `multipart/form-data` |
-| GET | `/api/search` | Retrieve similar chunks without generation | -                     |
-| GET | `/api/ask` | Retrieve chunks and generate an answer | -                     |
-
+| Method | Endpoint | Purpose | Request             |
+|--------|----------|---------|---------------------|
+| POST | `/api/ingest` | Ingest raw text | JSON`{text,source}` |
+| POST | `/api/ingest/file` | Ingest a document (PDF, DOCX, TXT, MD) | Multipart `file`     |
+| GET | `/api/search` | Retrieve similar chunks without generation | `?q=...`            |
+| GET | `/api/ask` | Retrieve chunks and generate an answer | `?q=...`            |
+| GET | `/api/sources` | List ingested sources with chunk counts | -                   |
+| GET | `/api/sources/{source}/chunks` | Get all chunks for one source | -                   |
 Interactive docs at `http://localhost:8080/swagger-ui.html`
 
 
@@ -103,8 +110,8 @@ Interactive docs at `http://localhost:8080/swagger-ui.html`
     curl "localhost:8080/api/ask?q=why%20do%20octopuses%20prefer%20crawling"
 
     {
-      "answer": "he reason Octopuses prefer crawling is because their third heart stops beating when they swim, affecting their blood flow.",
-      "sources": [
+      "answer": "The reason Octopuses prefer crawling is because their third heart stops beating when they swim, affecting their blood flow.",
+      "sourceRefs": [
         {
           "text": "Octopuses have three hearts. Two pump blood to the gills, one pumps it to the rest of the body. The third heart stops beating when they swim, which is why they prefer crawling.",
           "source": "ocean-facts.md",
@@ -112,11 +119,13 @@ Interactive docs at `http://localhost:8080/swagger-ui.html`
         }
       ]
     }
+the formula for score is 1 - cosine distance
 
 ## Why RAG? Why not MCP?
-RAG fits better for this use case. It retrieves first, then the LLM answers over a fixed set of chunks (top-K). That means retrieval is deterministic, not probabilistic so the same question returns the same sources every time, and every answer traces back to chunks from ingested text or files.
+RAG fits better for this use case. It retrieves first, then the LLM answers over a fixed set of chunks (top-K). That means retrieval is deterministic, not probabilistic so the same question returns the same sourceRefs every time, and every answer traces back to chunks from ingested text or files.
 
 With MCP, the same question can lead to different answers because the model decides what to fetch at query time. For a personal knowledge base, that defeats the purpose. The whole point is to store what I've learned and read, and to retrieve it reliably. If retrieval isn't reproducible, I might as well just use a search engine.
+
 Which I already have. It's called a browser.
 
 ## Known limitations
