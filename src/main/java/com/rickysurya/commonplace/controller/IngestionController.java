@@ -3,8 +3,6 @@ package com.rickysurya.commonplace.controller;
 import com.rickysurya.commonplace.dto.IngestRequest;
 import com.rickysurya.commonplace.service.IngestionService;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +20,7 @@ public class IngestionController {
         this.ingestionService = ingestionService;
     }
 
-    private static final Logger log = LoggerFactory.getLogger(IngestionController.class);
-
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> ingestText(@Valid @RequestBody IngestRequest ingestRequest) {
         ingestionService.ingestText(ingestRequest.text(), ingestRequest.source());
         return ResponseEntity.ok(Map.of("status", "ingested"));

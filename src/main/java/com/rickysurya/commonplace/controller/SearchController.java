@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/search")
 public class SearchController {
     private final SearchService searchService;
     public SearchController(SearchService searchService) {
         this.searchService = searchService;
     }
 
-    @GetMapping("/search")
+    @GetMapping
     public List<Document> search(@RequestParam @NotBlank String q) {
         return searchService.search(q);
     }

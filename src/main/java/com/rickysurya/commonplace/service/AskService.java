@@ -1,7 +1,7 @@
 package com.rickysurya.commonplace.service;
 
 import com.rickysurya.commonplace.dto.AskResponse;
-import com.rickysurya.commonplace.dto.Source;
+import com.rickysurya.commonplace.dto.SourceRef;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -72,14 +72,14 @@ public class AskService {
                 .user(buildUserMessage(context, question))
                 .call()
                 .content();
-        List<Source> sources = docs.stream()
-                .map(d -> new Source(
+        List<SourceRef> sourceRefs = docs.stream()
+                .map(d -> new SourceRef(
                         d.getText(),
                         (String) d.getMetadata().get("source"),
                         d.getScore() != null ? d.getScore() :0.0
 
                 )).toList();
-        return new AskResponse(answer, sources);
+        return new AskResponse(answer, sourceRefs);
     }
 
 }
