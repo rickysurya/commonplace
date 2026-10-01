@@ -94,6 +94,8 @@ flowchart LR
 | GET | `/api/ask` | Retrieve chunks and generate an answer | `?q=...`            |
 | GET | `/api/sources` | List ingested sources with chunk counts | -                   |
 | GET | `/api/sources/{source}/chunks` | Get all chunks for one source | -                   |
+
+
 Interactive docs at `http://localhost:8080/swagger-ui.html`
 
 
