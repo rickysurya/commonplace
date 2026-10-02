@@ -1,5 +1,9 @@
 # Commonplace
 
+![CI](https://github.com/rickysurya/commonplace/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Java](https://img.shields.io/badge/Java-25-orange)
+
 Personal knowledge base with semantic search 
 and RAG-powered Q&A. I made it to keep track of articles, journals, papers, and my own notes. 
 Whenever I write notes after learning something new, I seldom reopen the notes and just resort to a search engine. It feels like such a shame that after the time dedicated for writing notes with my own language and understanding that helps me recall the knowledge better. 
