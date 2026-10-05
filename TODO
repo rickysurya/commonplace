@@ -1,0 +1,42 @@
+## Prometheus / Grafana setup
+
+### application.yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: commonplace
+
+- `management.endpoints.web.exposure.include` = allow-list of actuator endpoints
+  exposed over HTTP. Default only exposes /health. Everything else stays hidden
+  unless listed. Never include `env` or `heapdump` publicly — leaks secrets and memory.
+- `management.metrics.tags.application` = global tag glued onto every Micrometer
+  metric. Lets you filter metrics by service in Prometheus/Grafana once multiple
+  services exist. Convention tag everyone uses.
+
+### Verify
+curl -s localhost:8080/actuator/prometheus | head -30
+curl -s localhost:8080/actuator/health
+
+### prometheus.yml (project root)
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: 'commonplace'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+
+- `host.docker.internal` = reach the host machine from inside a container.
+  Required on Linux with `extra_hosts: ["host.docker.internal:host-gateway"]`.
+
+### compose.yaml services
+- prometheus:9090  scrapes app metrics
+- grafana:3000    visualizes them
+- both need named volumes (prometheus-data, grafana-data) to persist
+
+### Grafana
+- Data source URL: http://prometheus:9090 (container name, not localhost)
+- First query: rate(http_server_requests_seconds_count{application="commonplace"}[5m])
