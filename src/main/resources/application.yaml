@@ -24,3 +24,11 @@ spring:
         dimensions: 1024                #768 for nomic-embed-text
         index-type: HNSW                # Hierarchial Navigable Small World for faster similarity search
         distance-type: COSINE_DISTANCE
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: commonplace
