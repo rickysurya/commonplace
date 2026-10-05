@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.Map;
 
@@ -32,5 +33,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleAll(Exception e) {
         log.error("Unhandled exception", e);
         return ResponseEntity.status(500).body(Map.of("error", "Something went wrong"));
+    }
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNotFound(NoResourceFoundException e) {
+        return ResponseEntity.status(404).body(Map.of("error", "Not found"));
     }
 }
