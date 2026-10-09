@@ -49,7 +49,7 @@ public class IngestionService {
     public void ingestFile(MultipartFile file) {
         String text = extractText(file);
         String source = file.getOriginalFilename();
-        String src = source != null ? source : "unknown";
+        String src = (source == null || source.isBlank()) ? "unknown" : source;
         ingest(text, Map.of("source", src));
     }
 
