@@ -132,15 +132,16 @@ RAG fits better for this use case. It retrieves first, then the LLM answers over
 
 With MCP, the same question can lead to different answers because the model decides what to fetch at query time. For a personal knowledge base, that defeats the purpose. The whole point is to store what I've learned and read, and to retrieve it reliably. If retrieval isn't reproducible, I might as well just use a search engine.
 
-Which I already have. It's called a browser.
 
 ## Known limitations
 
+- Currently running on 4GB of VRAM hence the default model
 - Text extraction quality varies with PDF layout (e.g. newspaper)
 - Local LLM (qwen2.5:3b) is fast but less accurate than hosted models
 - No URL ingestion (by design)
 
 ## Roadmap 
+ - Offload search to TEV1:4B decision model for faster results
  - Stream tokens from the LLM as they are generated 
  - Deduplication by content-hash the file or text before chunking
  - Async ingestion 
