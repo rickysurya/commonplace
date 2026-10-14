@@ -14,11 +14,11 @@ import java.util.stream.Collectors;
 @Service
 public class AskService {
     private final VectorStore vectorStore;
-    private final ChatClient chatClient;
+    private final LlmClient llmClient;
 
-    public AskService(VectorStore vectorStore, ChatClient.Builder chatClientBuilder) {
+    public AskService(VectorStore vectorStore, LlmClient llmClient) {
         this.vectorStore = vectorStore;
-        this.chatClient = chatClientBuilder.build();
+        this.llmClient = llmClient;
     }
 
     private final static String SYSTEM_PROMPT = """
@@ -67,11 +67,8 @@ public class AskService {
         }
         String context = buildContext(docs);
 
-        String answer = chatClient.prompt()
-                .system(SYSTEM_PROMPT)
-                .user(buildUserMessage(context, question))
-                .call()
-                .content();
+        String answer = llmClient.generate(SYSTEM_PROMPT, buildUserMessage(context, question));
+
         List<SourceRef> sourceRefs = docs.stream()
                 .map(d -> new SourceRef(
                         d.getText(),
