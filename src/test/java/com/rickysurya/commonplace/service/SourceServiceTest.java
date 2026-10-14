@@ -62,6 +62,23 @@ class SourceServiceTest {
     }
 
     @Test
+    void list_excludesRowsWithNullSource() {
+        insert("11111111-1111-1111-1111-111111111111", "a", "ocean.md", 0);
+        jdbc.update("""
+            INSERT INTO vector_store (id, content, metadata, embedding)
+            VALUES (?::uuid, ?, ?::jsonb, array_fill(0, ARRAY[1024])::vector)
+            """,
+                "22222222-2222-2222-2222-222222222222",
+                "orphan",
+                "{\"chunk_index\":0}");
+
+        List<SourceDetail> result = sourceService.list();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).source()).isEqualTo("ocean.md");
+    }
+
+    @Test
     void chunksFor_returnsChunksOrderedByChunkIndex() {
         insert("11111111-1111-1111-1111-111111111111", "second", "ocean.md", 1);
         insert("22222222-2222-2222-2222-222222222222", "first", "ocean.md", 0);
