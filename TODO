@@ -12,7 +12,7 @@ management:
 
 - `management.endpoints.web.exposure.include` = allow-list of actuator endpoints
   exposed over HTTP. Default only exposes /health. Everything else stays hidden
-  unless listed. Never include `env` or `heapdump` publicly — leaks secrets and memory.
+  unless listed. Never include `env` or `heapdump` publicly  leaks secrets and memory.
 - `management.metrics.tags.application` = global tag glued onto every Micrometer
   metric. Lets you filter metrics by service in Prometheus/Grafana once multiple
   services exist. Convention tag everyone uses.

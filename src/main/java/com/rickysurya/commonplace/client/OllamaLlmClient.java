@@ -1,4 +1,4 @@
-package com.rickysurya.commonplace.service;
+package com.rickysurya.commonplace.client;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;

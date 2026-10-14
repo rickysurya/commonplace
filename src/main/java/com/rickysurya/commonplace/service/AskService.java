@@ -1,8 +1,8 @@
 package com.rickysurya.commonplace.service;
 
+import com.rickysurya.commonplace.client.LlmClient;
 import com.rickysurya.commonplace.dto.AskResponse;
 import com.rickysurya.commonplace.dto.SourceRef;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;

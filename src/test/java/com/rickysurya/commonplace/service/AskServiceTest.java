@@ -1,5 +1,6 @@
 package com.rickysurya.commonplace.service;
 
+import com.rickysurya.commonplace.client.LlmClient;
 import com.rickysurya.commonplace.dto.AskResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

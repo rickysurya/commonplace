@@ -1,4 +1,4 @@
-package com.rickysurya.commonplace.service;
+package com.rickysurya.commonplace.client;
 
 public interface LlmClient {
     String generate(String systemPrompt, String userPrompt);
