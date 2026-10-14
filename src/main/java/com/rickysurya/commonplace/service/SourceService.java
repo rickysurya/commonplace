@@ -20,7 +20,7 @@ public class SourceService {
                           FROM vector_store
                           WHERE metadata->>'source' IS NOT NULL
                           GROUP BY metadata->>'source'
-                          ORDER BY count(*) DESC
+                          ORDER BY count(*) DESC, source ASC
                         """,
                 (rs, rowNum) -> new SourceDetail(
                         rs.getInt("chunk_count"),
