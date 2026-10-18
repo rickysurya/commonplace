@@ -85,10 +85,16 @@ flowchart LR
 
         docker compose --profile full up -d --build
 
-   ### URLs
-* **API:** `http://localhost:8080`
-* **Swagger UI:** `http://localhost:8080/swagger-ui.html`
-* **Grafana (Metrics):** `http://localhost:3000` (admin / see `.env`)
+ ## Usage
+
+Once the application is running, the following services are available locally:
+
+| Service | URL | Notes |
+| :--- | :--- | :--- |
+| **REST API** | `http://localhost:8080/api` | Main application endpoints |
+| **Swagger UI** | `http://localhost:8080/swagger-ui.html` | Interactive API documentation |
+| **Grafana** | `http://localhost:3000` | Metrics dashboard (admin/admin) |
+| **Prometheus** | `http://localhost:9090` | Raw metrics scraper |
 
 
 
@@ -103,8 +109,6 @@ flowchart LR
 | GET | `/api/sources` | List ingested sources with chunk counts | -                   |
 | GET | `/api/sources/{source}/chunks` | Get all chunks for one source | -                   |
 
-
-Interactive docs at `http://localhost:8080/swagger-ui.html`
 
 
 ## Example
