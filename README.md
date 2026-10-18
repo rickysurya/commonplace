@@ -53,7 +53,7 @@ flowchart LR
 | Distance metric | Cosine | Text embeddings encode direction, not magnitude. Cosine measures angle, which maps to semantic similarity. |
 | Chunking | Spring AI `TokenTextSplitter` | It respects punctuation, supports overlapping, and is token-aware                                          |
 | File extraction | Apache Tika | Single API for PDF, DOCX, XLSX, HTML. Format detection built in                                            |
-
+| Observability | Micrometer, Prometheus, Grafana | Standard Spring Boot instrumentation. Scrapes JVM, HTTP, and CPU metrics for real-time visualization. |
 
 ## Setup
 
@@ -85,7 +85,11 @@ flowchart LR
 
         docker compose --profile full up -d --build
 
-   Open http://localhost:8080
+   ### URLs
+* **API:** `http://localhost:8080`
+* **Swagger UI:** `http://localhost:8080/swagger-ui.html`
+* **Grafana (Metrics):** `http://localhost:3000` (admin / see `.env`)
+
 
 
 ## API
@@ -131,6 +135,14 @@ the formula for score is 1 - cosine distance
 RAG fits better for this use case. It retrieves first, then the LLM answers over a fixed set of chunks (top-K). That means retrieval is deterministic, not probabilistic so the same question returns the same sourceRefs every time, and every answer traces back to chunks from ingested text or files.
 
 With MCP, the same question can lead to different answers because the model decides what to fetch at query time. For a personal knowledge base, that defeats the purpose. The whole point is to store what I've learned and read, and to retrieve it reliably. If retrieval isn't reproducible, I might as well just use a search engine.
+
+## Monitoring & Observability
+
+The application is instrumented with **Micrometer** and exposes metrics via **Prometheus**. **Grafana** is used to visualize system health, request throughput, and JVM performance.
+
+*The screenshot below was captured during a synthetic load test, showing HTTP throughput, JVM Heap allocation (G1 Eden Space), and CPU utilization.*
+
+![Grafana Dashboard](docs/grafana.png)
 
 
 ## Known limitations
