@@ -2,13 +2,13 @@ package com.rickysurya.commonplace.service;
 
 import com.rickysurya.commonplace.client.LlmClient;
 import com.rickysurya.commonplace.dto.AskResponse;
-import com.rickysurya.commonplace.dto.SourceRef;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,14 +69,12 @@ public class AskService {
 
         String answer = llmClient.generate(SYSTEM_PROMPT, buildUserMessage(context, question));
 
-        List<SourceRef> sourceRefs = docs.stream()
-                .map(d -> new SourceRef(
-                        d.getText(),
-                        (String) d.getMetadata().get("source"),
-                        d.getScore() != null ? d.getScore() :0.0
-
-                )).toList();
-        return new AskResponse(answer, sourceRefs);
+        List<String> uniqueSources = docs.stream()
+                .map(d -> (String) d.getMetadata().get("source"))
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        return new AskResponse(answer, uniqueSources);
     }
 
 }

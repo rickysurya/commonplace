@@ -58,8 +58,7 @@ class AskServiceTest {
 
         assertThat(response.answer()).isEqualTo("Octopuses have three hearts.");
         assertThat(response.sources()).hasSize(1);
-        assertThat(response.sources().get(0).text()).isEqualTo("Octopuses have three hearts.");
-        assertThat(response.sources().get(0).source()).isEqualTo("ocean-facts.md");
+        assertThat(response.sources().get(0)).isEqualTo("ocean-facts.md");
     }
 
     @Test
@@ -93,7 +92,6 @@ class AskServiceTest {
         AskResponse response = service.ask("test");
 
         assertThat(response.sources()).hasSize(2);
-        assertThat(response.sources().get(0).source()).isEqualTo("a.md");
-        assertThat(response.sources().get(1).source()).isEqualTo("b.md");
+        assertThat(response.sources()).containsExactly("a.md", "b.md");
     }
 }
