@@ -7,8 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.VectorStore;
+import com.rickysurya.commonplace.repository.SearchRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -22,21 +21,20 @@ import static org.mockito.Mockito.when;
 
 class AskServiceTest {
 
-    VectorStore vectorStore;
+    SearchRepository searchRepository;
     LlmClient llmClient;
     AskService service;
 
     @BeforeEach
     void setup() {
-        vectorStore = Mockito.mock(VectorStore.class);
+        searchRepository = Mockito.mock(SearchRepository.class);
         llmClient = Mockito.mock(LlmClient.class);
-        service = new AskService(vectorStore, llmClient);
+        service = new AskService(llmClient, searchRepository);
     }
 
     @Test
     void ask_shortCircuitsWhenNoDocumentsRetrieved() {
-        when(vectorStore.similaritySearch(any(SearchRequest.class)))
-                .thenReturn(List.of());
+        when(searchRepository.search(anyString())).thenReturn(List.of());
 
         AskResponse response = service.ask("why do octopuses prefer crawling?");
 
@@ -49,8 +47,7 @@ class AskServiceTest {
     void ask_returnsLlmAnswerForRetrievedDocuments() {
         Document doc = new Document("Octopuses have three hearts.",
                 Map.of("source", "ocean-facts.md"));
-        when(vectorStore.similaritySearch(any(SearchRequest.class)))
-                .thenReturn(List.of(doc));
+        when(searchRepository.search(anyString())).thenReturn(List.of(doc));
         when(llmClient.generate(anyString(), anyString()))
                 .thenReturn("Octopuses have three hearts.");
 
@@ -65,8 +62,7 @@ class AskServiceTest {
     void ask_sendsSystemPromptAndContextToLlm() {
         Document doc = new Document("The US issues the currency it borrows in.",
                 Map.of("source", "debt-paper.pdf"));
-        when(vectorStore.similaritySearch(any(SearchRequest.class)))
-                .thenReturn(List.of(doc));
+        when(searchRepository.search(anyString())).thenReturn(List.of(doc));
         when(llmClient.generate(anyString(), anyString())).thenReturn("answer");
 
         service.ask("why can't the US default?");
@@ -85,8 +81,7 @@ class AskServiceTest {
     void ask_multipleDocumentsAreAllIncludedInContext() {
         Document doc1 = new Document("first chunk", Map.of("source", "a.md"));
         Document doc2 = new Document("second chunk", Map.of("source", "b.md"));
-        when(vectorStore.similaritySearch(any(SearchRequest.class)))
-                .thenReturn(List.of(doc1, doc2));
+        when(searchRepository.search(anyString())).thenReturn(List.of(doc1, doc2));
         when(llmClient.generate(anyString(), anyString())).thenReturn("answer");
 
         AskResponse response = service.ask("test");
